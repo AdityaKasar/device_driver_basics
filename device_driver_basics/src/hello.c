@@ -24,8 +24,8 @@ int __exit hello_exit()
 }
 
 /*
-* Note : 	#include <linux/init.h> is need module_init() and 
-* 		module_exit().
+* Note : 	#include <linux/init.h> is needed for module_init() 
+*		and module_exit().
 */
 
 module_init(hello_init);
