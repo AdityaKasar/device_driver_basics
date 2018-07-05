@@ -1,8 +1,8 @@
-Device Driver Basic
+#Device Driver Basic
 --------------------
 
-Compiling :
+#Compiling :
 -----------
-$ git clone https://github.com/AdityaKasar/device_driver_basics.git
-$ cd device_driver_basics
-$ make 
+#$ git clone https://github.com/AdityaKasar/device_driver_basics.git
+#$ cd device_driver_basics
+#$ make 
