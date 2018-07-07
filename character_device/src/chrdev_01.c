@@ -16,7 +16,7 @@ dev file.
 int init_module(void);
 void cleanup_module(void);
 static int device_open(struct inode *, struct file *);
-static int device_close(struct inode *, struct file *);
+static int device_release(struct inode *, struct file *);
 static ssize_t device_read(struct file *, char *, size_t, loff_t *);
 static ssize_t device_write(struct file *, const char *, size_t, loff_t * );
 
@@ -43,7 +43,7 @@ static struct file_operations fops ={
 	.read	=device_read,
 	.write	=device_write,
 	.open	=device_open,
-	.close	=device_close
+	.release=device_release
 };
 
 
@@ -58,7 +58,7 @@ description	: This function will be called when
 		  when module in loaded vai insmod
 */
 
-static int init_module(void)
+int init_module(void)
 {
 	/* Acquire Major number for our device */
 	Major = register_chrdev(0, DEVICE_NAME, &fops);
@@ -68,9 +68,10 @@ static int init_module(void)
 		return Major;
 	}
 
-	printk(KERN_INFO "Dev file created : mknod /dev/%s c %d 0 .\n"DEVICE_MAJOR,Major);
+	printk(KERN_INFO "Dev file created : mknod /dev/%s c %d 0 .\n",DEVICE_NAME,Major);
 	return 0;
 } 
+
 
 
 /*
@@ -78,15 +79,12 @@ function_name   : cleanup_module()
 description     : This function will be called when 
                   when module in un-loaded vai rmmod
 */
-static void cleanup_module(void)
+void cleanup_module(void)
 {
-	int ret;
-	ret = unregister_chrdev(Major,DEVICE_NAME);
-	if(0 > ret)
-	{
-		printk(KERN_ALERT "Unregister_chrdev failed : %d\n",ret);
-	}
+	unregister_chrdev(Major,DEVICE_NAME);
 }
+
+
 
 /*
 function_name   : device_open()
@@ -94,7 +92,6 @@ description     : This function will be called when
                   when process opens device file
 		  eg: cat /dev/my_chardev
 */
-
 static int device_open(struct inode *inode, struct file *file)
 {
 	static int counter = 0;
@@ -116,13 +113,14 @@ function_name   : device_close()
 description     : This function will be called when 
                   when process close device file
 */
-
-static int device_close(struct inode *inode, struct file *file)
+static int device_release(struct inode *inode, struct file *file)
 {
 	Device_open--; 		/* Free this flag after use for next caller */
 	module_put(THIS_MODULE);
 	return 0;
 }
+
+
 
 /*
 function_name   : device_read()
@@ -130,64 +128,43 @@ description     : This function should be called by process
 		  after opening device file to read from that
 		  device file.
 */
-
 static ssize_t device_read(struct file *file, char *buffer,\ 
-				size_t length, l_off_t *offset)
+				size_t length, loff_t *offset)
 {
+	/* Bytes actually written to the buffer */
+	int byte_read=0; 
 	
+	if(0 == *msg_ptr)
+		return 0; /* End of msg signified by '0' */
+
+		/* 
+		 * The buffer is in the user data segment, not the kernel 
+		 * segment so "*" assignment won't work.  We have to use 
+		 * put_user which copies data from the kernel data segment to
+		 * the user data segment. 
+		 */
+	while(length  && *msg_ptr)
+	{
+		put_user(*(msg_ptr++),(buffer++));
+		length--;
+		byte_read++;
+	}
+
+	/* Return number of bytes put into buffer */
+	return byte_read;
 }
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/*
+function_name   : device_read()
+description     : This function should be called by process 
+                  after opening device file to write to dev
+		  file : echo "Hello_world" > /dev/my_chardev
+*/
+static ssize_t device_write(struct file *file, const char *buff, size_t len, loff_t *off)
+{
+	printk(KERN_ALERT "Sorry this operation is not supported.\n");
+	return -EINVAL;
+}
 
