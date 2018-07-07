@@ -87,7 +87,7 @@ int init_module(void)
 	name -> 	Name of your device that should be associated 
 			   with the major numbers. The same name will appear in /proc/devices.
 	*/
-#if 0
+	
 	ret = alloc_chrdev_region(&devno,0,1,"test_chrdev_02");
 	if(0 > ret)
 	{
@@ -137,7 +137,7 @@ int init_module(void)
 		return ret;
 	}
 
-#endif
+
 	/*Initialise device semaphore */
 //	sema_init(&char_arr.sem,1);
 
